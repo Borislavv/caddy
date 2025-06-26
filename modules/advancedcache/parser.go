@@ -1,0 +1,22 @@
+package advancedcache
+
+import (
+	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
+	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/rs/zerolog/log"
+)
+
+func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
+	log.Info().Msgf("[advanced-cache] parsing caddy file")
+	defer log.Info().Msgf("[advanced-cache] caddy file parsed")
+
+	var middleware = &CacheMiddleware{}
+	if err := middleware.UnmarshalCaddyfile(h.Dispenser); err != nil {
+		log.Error().Err(err).Msg("[advanced-cache] failed to parse caddy config")
+		return nil, err
+	}
+
+	log.Info().Msgf("[advanced-cache] middleware was born for '%s' environment", middleware.Env)
+
+	return middleware, nil
+}

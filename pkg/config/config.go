@@ -38,12 +38,25 @@ type Env struct {
 type CacheBox struct {
 	Env         string        `yaml:"env"`
 	Enabled     bool          `yaml:"enabled"`
+	LifeTime    Lifetime      `yaml:"lifetime"`
+	Upstream    Upstream      `yaml:"upstream"`
 	Persistence Persistence   `yaml:"persistence"`
 	Preallocate Preallocation `yaml:"preallocate"`
 	Eviction    Eviction      `yaml:"eviction"`
 	Refresh     Refresh       `yaml:"refresh"`
 	Storage     Storage       `yaml:"storage"`
 	Rules       []*Rule       `yaml:"rules"`
+}
+
+type Lifetime struct {
+	MaxReqDuration             time.Duration `yaml:"max_req_dur"`               // If a request lifetime is longer than 100ms then request will be canceled by context.
+	EscapeMaxReqDurationHeader string        `yaml:"escape_max_req_dur_header"` // If the header exists the timeout above will be skipped.
+}
+
+type Upstream struct {
+	Url     string        `yaml:"url"`     // Reverse Proxy url (can be found in Caddyfile). URL to underlying backend.
+	Rate    int           `yaml:"rate"`    // Rate limiting reqs to backend per second.
+	Timeout time.Duration `yaml:"timeout"` // Timeout for requests to backend.
 }
 
 type Dump struct {
@@ -86,10 +99,9 @@ type Refresh struct {
 	// expireTime = ttl * (-beta * ln(random()))
 	// Подробнее: RFC 5861 и https://web.archive.org/web/20100829170210/http://labs.google.com/papers/staleness.pdf
 	// beta: "0.4"
-	Beta       float64       `yaml:"beta"`      // between 0 and 1
-	MinStale   time.Duration `yaml:"min_stale"` // computed=time.Duration(float64(TTL/ErrorTTL) * Beta)
-	Timeout    time.Duration `yaml:"timeout"`   // computed=time.Duration(float64(TTL/ErrorTTL) * Beta)
-	BackendURL string        `yaml:"backend_url"`
+	Beta     float64       `yaml:"beta"`      // between 0 and 1
+	MinStale time.Duration `yaml:"min_stale"` // computed=time.Duration(float64(TTL/ErrorTTL) * Beta)
+	Timeout  time.Duration `yaml:"timeout"`   // computed=time.Duration(float64(TTL/ErrorTTL) * Beta)
 }
 
 type Rule struct {
@@ -116,22 +128,17 @@ type Value struct {
 }
 
 const (
-	configPath     = "/config/config.prod.yaml"
-	configPathDev  = "/config/config.dev.yaml"
-	configPathTest = "/../../config/config.test.yaml"
+	configPath    = "/config/config.prod.yaml"
+	configPathDev = "/config/config.dev.yaml"
 )
 
-func LoadConfig() (*Cache, error) {
-	env := os.Getenv("APP_ENV")
-
+func LoadConfig(env string) (*Cache, error) {
 	var path string
 	switch {
 	case env == Prod:
 		path = configPath
 	case env == Dev:
 		path = configPathDev
-	case env == Test:
-		path = configPathTest
 	default:
 		return nil, errors.New("unknown APP_ENV: '" + env + "'")
 	}

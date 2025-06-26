@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/caddyserver/caddy/v2/pkg/config"
 	"github.com/caddyserver/caddy/v2/pkg/repository"
-	"github.com/caddyserver/caddy/v2/pkg/storage/lru"
 	"io"
 	"net/http"
 	"os"
@@ -57,14 +56,14 @@ type Dumper interface {
 type Dump struct {
 	cfg        *config.Cache
 	shardedMap *sharded.Map[*model.Response] // Sharded storage for cache entries
-	storage    *lru.Storage
+	storage    Storage
 	backend    repository.Backender
 }
 
 func NewDumper(
 	cfg *config.Cache,
 	shardedMap *sharded.Map[*model.Response],
-	storage *lru.Storage,
+	storage Storage,
 	backend repository.Backender,
 ) *Dump {
 	return &Dump{

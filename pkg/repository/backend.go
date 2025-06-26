@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/caddyserver/caddy/v2/pkg/config"
 	"github.com/caddyserver/caddy/v2/pkg/model"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -58,7 +59,7 @@ func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request
 	ctx, cancel := context.WithTimeout(ctx, s.cfg.Cache.Refresh.Timeout)
 	defer cancel()
 
-	url := s.cfg.Cache.Refresh.BackendURL
+	url := s.cfg.Cache.Upstream.Url
 	query := req.ToQuery()
 
 	// Efficiently concatenate base URL and query.
@@ -84,6 +85,8 @@ func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info().Msg(string(body.Bytes()))
 
 	return model.NewData(s.cfg, req.Path(), response.StatusCode, response.Header, body.Bytes()), nil
 }
