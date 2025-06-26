@@ -29,3 +29,6 @@ caddy-dist
 # IDE files
 .idea/
 .vscode/
+
+# Dump files
+public/dump
