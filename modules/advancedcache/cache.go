@@ -27,7 +27,6 @@ func init() {
 type CacheMiddleware struct {
 	Env       string
 	ctx       context.Context
-	cancel    context.CancelFunc
 	cfg       *config.Cache
 	store     storage.Storage
 	backend   repository.Backender
