@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -127,22 +126,7 @@ type Value struct {
 	HeadersBytes [][]byte
 }
 
-const (
-	configPath    = "/config/config.prod.yaml"
-	configPathDev = "/config/config.dev.yaml"
-)
-
-func LoadConfig(env string) (*Cache, error) {
-	var path string
-	switch {
-	case env == Prod:
-		path = configPath
-	case env == Dev:
-		path = configPathDev
-	default:
-		return nil, errors.New("unknown APP_ENV: '" + env + "'")
-	}
-
+func LoadConfig(path string) (*Cache, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -166,7 +150,6 @@ func LoadConfig(env string) (*Cache, error) {
 	if err = yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal yaml from %s: %w", path, err)
 	}
-	cfg.Cache.Env = env
 
 	for k, rule := range cfg.Cache.Rules {
 		cfg.Cache.Rules[k].PathBytes = []byte(rule.Path)

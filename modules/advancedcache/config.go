@@ -10,7 +10,7 @@ func (middleware *CacheMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) er
 		for d.NextBlock(0) {
 			switch d.Val() {
 			case "env":
-				if !d.Args(&middleware.Env) {
+				if !d.Args(&middleware.ConfigPath) {
 					return d.Errf("advancedcache config path expected by found in Caddyfile")
 				}
 			default:
@@ -22,7 +22,7 @@ func (middleware *CacheMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) er
 }
 
 func (middleware *CacheMiddleware) loadConfig() (err error) {
-	if middleware.cfg, err = config.LoadConfig(middleware.Env); err != nil {
+	if middleware.cfg, err = config.LoadConfig(middleware.ConfigPath); err != nil {
 		return err
 	}
 	return nil

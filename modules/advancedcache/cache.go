@@ -17,7 +17,7 @@ import (
 
 var _ caddy.Module = (*CacheMiddleware)(nil)
 
-const moduleName = "advancedcache"
+const moduleName = "advanced_cache"
 
 func init() {
 	caddy.RegisterModule(&CacheMiddleware{})
@@ -25,16 +25,16 @@ func init() {
 }
 
 type CacheMiddleware struct {
-	Env       string
-	ctx       context.Context
-	cfg       *config.Cache
-	store     storage.Storage
-	backend   repository.Backender
-	refresher storage.Refresher
-	evictor   storage.Evictor
-	dumper    storage.Dumper
-	count     int64 // Num
-	duration  int64 // UnixNano
+	ConfigPath string
+	ctx        context.Context
+	cfg        *config.Cache
+	store      storage.Storage
+	backend    repository.Backender
+	refresher  storage.Refresher
+	evictor    storage.Evictor
+	dumper     storage.Dumper
+	count      int64 // Num
+	duration   int64 // UnixNano
 }
 
 func (*CacheMiddleware) CaddyModule() caddy.ModuleInfo {

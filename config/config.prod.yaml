@@ -1,4 +1,5 @@
 cache:
+  env: "prod"
   enabled: true
 
   lifetime:
