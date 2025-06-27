@@ -33,7 +33,7 @@ http.handlers.advanced_cache
 
 The embedded middleware is functionally identical to the original [Advanced Cache project](https://github.com/Borislavv/advanced-cache), including:
 
-- Internal sharded cache with 4096+ shards
+- Internal sharded cache with 2048 shards
 - Per-shard LRU queues with proportional eviction
 - Optional TinyLFU filter (Count-Min Sketch + Doorkeeper)
 - Aggressive memory reuse and pooling (no allocations in hot paths)
@@ -45,12 +45,11 @@ The embedded middleware is functionally identical to the original [Advanced Cach
 
 ### Requirements
 - Go 1.20+
-- Caddy build tools (optional: `xcaddy`)
 
 ### Build
 ```bash
-git clone https://github.com/your-org/caddy-advanced-cache.git
-cd caddy-advanced-cache
+git clone https://gitlab.xbet.lan/v3group/backend/caddy.git
+cd caddy
 go build -o caddy ./cmd/caddy
 ```
 
@@ -59,7 +58,7 @@ go build -o caddy ./cmd/caddy
 :80 {
   route {
     advanced_cache {
-      config_path /etc/caddy/config.yaml
+      config_path /config/config.prod.yaml
     }
     reverse_proxy localhost:8080
   }
@@ -77,7 +76,7 @@ cache:
     escape_max_req_dur: "X-Google-Bot" # If the header exists the timeout above will be skipped.
 
   upstream:
-    url: "http://localhost:8020" # downstream reverse proxy host:port
+    url: "http://localhost:8080" # downstream reverse proxy host:port
     rate: 1000 # Rate limiting reqs to backend per second.
     timeout: "10s" # Timeout for requests to backend.
 
