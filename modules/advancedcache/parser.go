@@ -7,9 +7,6 @@ import (
 )
 
 func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
-	log.Info().Msgf("[advanced-cache] parsing caddy file")
-	defer log.Info().Msgf("[advanced-cache] caddy file parsed")
-
 	var middleware = &CacheMiddleware{}
 	if err := middleware.UnmarshalCaddyfile(h.Dispenser); err != nil {
 		log.Error().Err(err).Msg("[advanced-cache] failed to parse caddy config")
