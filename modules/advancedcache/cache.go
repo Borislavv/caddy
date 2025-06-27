@@ -18,6 +18,13 @@ import (
 
 var _ caddy.Module = (*CacheMiddleware)(nil)
 
+var (
+	contentTypeKey                  = "Content-Type"
+	applicationJsonValue            = "application/json"
+	lastModifiedKey                 = "Last-Modified"
+	serviceTemporaryUnavailableBody = []byte(`{"error":{"message":"Service temporarily unavailable."}}`)
+)
+
 const moduleName = "advanced_cache"
 
 func init() {
@@ -54,37 +61,46 @@ func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	from := time.Now()
 
+	// Build request (return error on rule missing for current path)
 	req, err := model.NewRequestFromNetHttp(middleware.cfg, r)
 	if err != nil {
+		// If path does not match then process request manually without cache
 		return next.ServeHTTP(w, r)
 	}
 
 	resp, isHit := middleware.store.Get(req)
 	if !isHit {
 		captured := newCaptureRW()
+
+		// Handle request manually due to store it
 		if srvErr := next.ServeHTTP(captured, r); srvErr != nil {
 			captured.header = make(http.Header)
 			captured.body.Reset()
 			captured.status = http.StatusServiceUnavailable
 			captured.WriteHeader(captured.status)
-			_, _ = captured.Write([]byte(`{"error":{"message":"Service temporarily unavailable."}}`))
+			_, _ = captured.Write(serviceTemporaryUnavailableBody)
 		}
 
+		// Build new response
 		path := unsafe.Slice(unsafe.StringData(r.URL.Path), len(r.URL.Path))
 		data := model.NewData(middleware.cfg, path, captured.status, captured.header, captured.body.Bytes())
 		resp, _ = model.NewResponse(data, req, middleware.cfg, middleware.backend.RevalidatorMaker(req))
 		middleware.store.Set(resp)
 	}
 
+	// Apply custom http headers
 	for key, vv := range resp.Data().Headers() {
 		for _, value := range vv {
 			w.Header().Add(key, value)
 		}
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("Last-Modified", resp.RevalidatedAt().Format(http.TimeFormat))
+	// Apply standard http headers
+	w.Header().Add(contentTypeKey, applicationJsonValue)
+	w.Header().Add(lastModifiedKey, resp.RevalidatedAt().Format(http.TimeFormat))
 	w.WriteHeader(resp.Data().StatusCode())
+
+	// Write response data
 	_, _ = w.Write(resp.Data().Body())
 
 	// Record the duration in debug mode for metrics.
