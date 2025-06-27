@@ -70,38 +70,41 @@ func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	resp, isHit := middleware.store.Get(req)
 	if !isHit {
-		captured := newCaptureRW()
+		captured := newCaptureResponseWriter(w)
 
 		// Handle request manually due to store it
 		if srvErr := next.ServeHTTP(captured, r); srvErr != nil {
-			captured.header = make(http.Header)
 			captured.body.Reset()
-			captured.status = http.StatusServiceUnavailable
-			captured.WriteHeader(captured.status)
+			captured.headers = make(http.Header)
+			captured.WriteHeader(captured.statusCode)
 			_, _ = captured.Write(serviceTemporaryUnavailableBody)
 		}
 
 		// Build new response
 		path := unsafe.Slice(unsafe.StringData(r.URL.Path), len(r.URL.Path))
-		data := model.NewData(middleware.cfg, path, captured.status, captured.header, captured.body.Bytes())
+		data := model.NewData(middleware.cfg, path, captured.statusCode, captured.headers, captured.body.Bytes())
 		resp, _ = model.NewResponse(data, req, middleware.cfg, middleware.backend.RevalidatorMaker(req))
-		middleware.store.Set(resp)
-	}
 
-	// Apply custom http headers
-	for key, vv := range resp.Data().Headers() {
-		for _, value := range vv {
-			w.Header().Add(key, value)
+		// Store response in cache
+		middleware.store.Set(resp)
+	} else {
+		// Write status code on hit
+		w.WriteHeader(resp.Data().StatusCode())
+
+		// Write response data
+		_, _ = w.Write(resp.Data().Body())
+
+		// Apply custom http headers
+		for key, vv := range resp.Data().Headers() {
+			for _, value := range vv {
+				w.Header().Add(key, value)
+			}
 		}
 	}
 
 	// Apply standard http headers
 	w.Header().Add(contentTypeKey, applicationJsonValue)
 	w.Header().Add(lastModifiedKey, resp.RevalidatedAt().Format(http.TimeFormat))
-	w.WriteHeader(resp.Data().StatusCode())
-
-	// Write response data
-	_, _ = w.Write(resp.Data().Body())
 
 	// Record the duration in debug mode for metrics.
 	atomic.AddInt64(&middleware.count, 1)
