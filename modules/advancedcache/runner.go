@@ -25,6 +25,11 @@ func (middleware *CacheMiddleware) run(ctx context.Context) error {
 	}
 
 	middleware.setUpCache()
+
+	if err := middleware.loadDump(); err != nil {
+		log.Error().Err(err).Msg("[dump] failed to load")
+	}
+
 	middleware.store.Run()
 	middleware.evictor.Run()
 	middleware.refresher.Run()
