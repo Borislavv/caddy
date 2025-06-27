@@ -10,7 +10,7 @@ func (middleware *CacheMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) er
 	for d.Next() {
 		for d.NextBlock(0) {
 			switch d.Val() {
-			case "env":
+			case "config_path":
 				if !d.Args(&middleware.ConfigPath) {
 					return d.Errf("advancedcache config path expected by found in Caddyfile")
 				}
