@@ -10,6 +10,7 @@ import (
 	"github.com/caddyserver/caddy/v2/pkg/repository"
 	"github.com/caddyserver/caddy/v2/pkg/storage"
 	"net/http"
+	"runtime"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -49,13 +50,9 @@ func (middleware *CacheMiddleware) Provision(ctx caddy.Context) error {
 }
 
 func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	defer runtime.Gosched()
+
 	from := time.Now()
-	if middleware.cfg == nil {
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusServiceUnavailable)
-		_, _ = w.Write([]byte(`{"error":{"message":"Service temporarily unavailable."}}`))
-		return nil
-	}
 
 	req, err := model.NewRequestFromNetHttp(middleware.cfg, r)
 	if err != nil {
