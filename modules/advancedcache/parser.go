@@ -12,8 +12,5 @@ func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error)
 		log.Error().Err(err).Msg("[advanced-cache] failed to parse caddy config")
 		return nil, err
 	}
-
-	log.Info().Msgf("[advanced-cache] middleware was born for '%s' environment", middleware.Env)
-
 	return middleware, nil
 }
