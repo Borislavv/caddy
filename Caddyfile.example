@@ -1,0 +1,8 @@
+:80 {
+	route {
+		advanced_cache {
+			config_path /config/config.dev.yaml
+		}
+		reverse_proxy localhost:8020
+	}
+}
