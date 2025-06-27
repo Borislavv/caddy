@@ -69,20 +69,66 @@ go build -o caddy ./cmd/caddy
 ## ⚙️ Config Example (`config.yaml`)
 ```yaml
 cache:
-  default_ttl: 30s
-  max_size_mb: 512
-  shards: 4096
-  compression: true
-  lru:
-    enabled: true
-    max_entries: 200000
-rules:
-  - path_prefix: /api/
-    ttl: 15s
-    tags: ["api"]
-  - path_prefix: /static/
-    ttl: 5m
-    compression: false
+  env: "prod"
+  enabled: true
+
+  lifetime:
+    max_req_dur: "100ms" # If a request lifetime is longer than 100ms then request will be canceled by context.
+    escape_max_req_dur: "X-Google-Bot" # If the header exists the timeout above will be skipped.
+
+  upstream:
+    url: "http://localhost:8020" # downstream reverse proxy host:port
+    rate: 1000 # Rate limiting reqs to backend per second.
+    timeout: "10s" # Timeout for requests to backend.
+
+  preallocate:
+    num_shards: 2048 # Fixed constant (see `NumOfShards` in code). Controls the number of sharded maps.
+    per_shard: 8196  # Preallocated map size per shard. Without resizing, this supports 2048*8196=~16785408 keys in total.
+    # Note: this is an upper-bound estimate and may vary depending on hash distribution quality.
+
+  eviction:
+    threshold: 0.9 # Trigger eviction when cache memory usage exceeds 90% of its configured limit.
+
+  storage:
+    size: 32212254720 # 30 GB of maximum allowed memory for the in-memory cache (in bytes).
+
+  refresh:
+    ttl: "12h"
+    error_ttl: "1h"
+    rate: 1000 # Rate limiting reqs to backend per second.
+    scan_rate: 10000 # Rate limiting of num scans items per second.
+    beta: 0.4 # Controls randomness in refresh timing to avoid thundering herd (from 0 to 1).
+
+  persistence:
+    dump:
+      enabled: true
+      format: "gzip" # gzip or raw json
+      dump_dir: "public/dump"
+      dump_name: "cache.dump.gz"
+      rotate_policy: "ring" # fixed, ring
+      max_files: 7
+
+  rules:
+    - path: "/api/v2/pagedata"
+      ttl: "24h"
+      error_ttl: "1h"
+      beta: 0.3 # Controls randomness in refresh timing to avoid thundering herd.
+      cache_key:
+        query: ['project[id]', 'domain', 'language', 'choice'] # Match query parameters by prefix.
+        headers: ['Accept-Encoding', 'X-Project-ID']           # Match headers by exact value.
+      cache_value:
+        headers: ['X-Project-ID']                              # Store only when headers match exactly.
+
+    - path: "/api/v1/pagecontent"
+      ttl: "36h"
+      error_ttl: "3h"
+      beta: 0.3 # Controls randomness in refresh timing to avoid thundering herd.
+      cache_key:
+        query: ['project[id]', 'domain', 'language', 'choice'] # Match query parameters by prefix.
+        headers: ['Accept-Encoding', 'X-Project-ID']           # Match headers by exact value.
+      cache_value:
+        headers: ['X-Project-ID']                              # Store only when headers match exactly.
+
 ```
 
 ## 📊 Metrics
