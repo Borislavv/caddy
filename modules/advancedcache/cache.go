@@ -9,10 +9,7 @@ import (
 	"github.com/caddyserver/caddy/v2/pkg/model"
 	"github.com/caddyserver/caddy/v2/pkg/repository"
 	"github.com/caddyserver/caddy/v2/pkg/storage"
-	"github.com/rs/zerolog/log"
 	"net/http"
-	"runtime"
-	"runtime/debug"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -53,17 +50,6 @@ func (middleware *CacheMiddleware) Provision(ctx caddy.Context) error {
 }
 
 func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	defer func() {
-		if rec := recover(); rec != nil {
-			log.Error().
-				Interface("panic", rec).
-				Bytes("stack", debug.Stack()).
-				Msg("[advanced-cache] panic recovered")
-			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
-		}
-		runtime.Gosched()
-	}()
-
 	from := time.Now()
 	if middleware.cfg == nil {
 		w.Header().Add("Content-Type", "application/json")
