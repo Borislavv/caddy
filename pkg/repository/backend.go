@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/caddyserver/caddy/v2/pkg/config"
 	"github.com/caddyserver/caddy/v2/pkg/model"
-	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -85,8 +84,6 @@ func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request
 	if err != nil {
 		return nil, err
 	}
-
-	log.Info().Msg(string(body.Bytes()))
 
 	return model.NewData(s.cfg, req.Path(), response.StatusCode, response.Header, body.Bytes()), nil
 }
