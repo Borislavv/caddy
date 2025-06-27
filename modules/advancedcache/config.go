@@ -3,6 +3,7 @@ package advancedcache
 import (
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/pkg/config"
+	"github.com/rs/zerolog/log"
 )
 
 func (middleware *CacheMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
@@ -22,6 +23,7 @@ func (middleware *CacheMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) er
 }
 
 func (middleware *CacheMiddleware) loadConfig() (err error) {
+	log.Info().Msgf("[advanced-cache] loading config by path %s", middleware.ConfigPath)
 	if middleware.cfg, err = config.LoadConfig(middleware.ConfigPath); err != nil {
 		return err
 	}
