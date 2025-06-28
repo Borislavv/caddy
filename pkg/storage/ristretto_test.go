@@ -53,19 +53,27 @@ func init() {
 	ristrettoCfg = &config.Cache{
 		Cache: config.CacheBox{
 			Enabled: true,
+			Upstream: config.Upstream{
+				Url:     "https://seo-master.lux.kube.xbet.lan",
+				Rate:    150,
+				Timeout: time.Second * 10,
+			},
+			LifeTime: config.Lifetime{
+				MaxReqDuration:             time.Millisecond * 100,
+				EscapeMaxReqDurationHeader: "X-Is-Google-Bot",
+			},
 			Preallocate: config.Preallocation{
-				PerShard: 8196,
+				PerShard: 256,
 			},
 			Eviction: config.Eviction{
 				Policy:    "lru",
 				Threshold: 0.9,
 			},
 			Refresh: config.Refresh{
-				TTL:        time.Hour,
-				ErrorTTL:   time.Minute * 10,
-				Beta:       0.4,
-				MinStale:   time.Minute * 40,
-				BackendURL: "https://seo-master.lux.kube.xbet.lan",
+				TTL:      time.Hour,
+				ErrorTTL: time.Minute * 10,
+				Beta:     0.4,
+				MinStale: time.Minute * 40,
 			},
 			Storage: config.Storage{
 				Type: "malloc",
