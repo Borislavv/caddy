@@ -119,6 +119,10 @@ func (s *Storage) set(new *model.Response) {
 
 // runLogger emits detailed stats about evictions, Weight, and GC activity every 5 seconds if debugging is enabled.
 func (s *Storage) runLogger() {
+	if !s.cfg.Cache.Logs.Stats {
+		return
+	}
+
 	go func() {
 		var ticker = utils.NewTicker(s.ctx, 5*time.Second)
 

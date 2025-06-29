@@ -65,11 +65,13 @@ func (e *Evict) run() {
 		case <-t:
 			items, freedMem := e.evictUntilWithinLimit()
 			if items > 0 || freedMem > 0 {
-				select {
-				case <-e.ctx.Done():
-					return
-				case evictionStatCh <- EvictionStat{items: items, freedMem: freedMem}:
-					runtime.Gosched()
+				if e.cfg.Cache.Logs.Stats {
+					select {
+					case <-e.ctx.Done():
+						return
+					case evictionStatCh <- EvictionStat{items: items, freedMem: freedMem}:
+						runtime.Gosched()
+					}
 				}
 			}
 		}
@@ -129,6 +131,10 @@ func (e *Evict) evictUntilWithinLimit() (items int, mem int64) {
 
 // runLogger emits detailed stats about evictions, Weight, and GC activity every 5 seconds if debugging is enabled.
 func (e *Evict) runLogger() {
+	if !e.cfg.Cache.Logs.Stats {
+		return
+	}
+
 	go func() {
 		var (
 			evictsNumPer5Sec int

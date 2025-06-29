@@ -51,6 +51,8 @@ func (s *Backend) RevalidatorMaker(req *model.Request) func(ctx context.Context)
 	}
 }
 
+var TooManyRequests = errors.New("too many requests")
+
 // requestExternalBackend actually performs the HTTP request to backend and parses the response.
 // Returns a Data object suitable for caching.
 func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request) (*model.Data, error) {

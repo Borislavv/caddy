@@ -10,7 +10,7 @@ func (middleware *CacheMiddleware) run(ctx context.Context) error {
 
 	middleware.ctx = ctx
 
-	if err := middleware.loadConfig(); err != nil {
+	if err := middleware.configure(); err != nil {
 		return err
 	}
 
@@ -19,6 +19,12 @@ func (middleware *CacheMiddleware) run(ctx context.Context) error {
 	if err := middleware.loadDump(); err != nil {
 		log.Error().Err(err).Msg("[dump] failed to load")
 	}
+
+	enabledStatStr := "enabled"
+	if middleware.cfg.Cache.Logs.Stats == false {
+		enabledStatStr = "disabled"
+	}
+	log.Info().Msg("[logs] stats writing is " + enabledStatStr)
 
 	middleware.store.Run()
 	middleware.evictor.Run()

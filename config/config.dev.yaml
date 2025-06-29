@@ -2,13 +2,17 @@ cache:
   env: "dev"
   enabled: true
 
+  logs:
+    level: "info" # Any zerolog.Level.
+    stats: true   # Should the statistic like num evictions, refreshes, rps, memory usage and so on be written in /std/out?
+
   lifetime:
     max_req_dur: "100ms" # If a request lifetime is longer than 100ms then request will be canceled by context.
     escape_max_req_dur: "X-Google-Bot" # If the header exists the timeout above will be skipped.
 
   upstream:
     url: "http://localhost:8020" # downstream reverse proxy host:port
-    rate: 160 # Rate limiting reqs to backend per second.
+    rate: 100 # Rate limiting reqs to backend per second.
     timeout: "10s" # Timeout for requests to backend.
 
   preallocate:
