@@ -4,6 +4,7 @@
 
 This repository is a production-grade fork of the official **Caddy HTTP server**, extended with a high-performance in-memory caching middleware named `advanced_cache`, developed for speed, control, and memory efficiency.
 Unlike plugin-based integrations, this version includes **native middleware embedding**, allowing for better optimization, tighter control, and lower overhead.
+If you like this project, ⭐️ it!
 
 ## 🔍 What Is Included
 
