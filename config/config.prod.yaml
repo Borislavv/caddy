@@ -1,7 +1,7 @@
 cache:
   env: "prod"
   enabled: true
-  
+
   logs:
     level: "info" # Any zerolog.Level.
     stats: true   # Should the statistic like num evictions, refreshes, rps, memory usage and so on be written in /std/out?
