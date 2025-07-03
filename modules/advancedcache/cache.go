@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-	"unsafe"
 )
 
 var _ caddy.Module = (*CacheMiddleware)(nil)
@@ -83,7 +82,7 @@ loop:
 func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	defer runtime.Gosched()
 
-	w.Header().Add(contentTypeKey, applicationJsonValue)
+	w.Header().Set(contentTypeKey, applicationJsonValue)
 
 	_, cancel := middleware.setUpCtxTimeout(r)
 	defer cancel()
@@ -119,8 +118,7 @@ func (middleware *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		}
 
 		// Build new response
-		path := unsafe.Slice(unsafe.StringData(r.URL.Path), len(r.URL.Path))
-		data := model.NewData(middleware.cfg, path, captured.statusCode, captured.headers, captured.body.Bytes())
+		data := model.NewData(req.Rule(), captured.statusCode, captured.headers, captured.body.Bytes())
 		resp, _ = model.NewResponse(data, req, middleware.cfg, middleware.backend.RevalidatorMaker(req))
 
 		// Store response in cache
