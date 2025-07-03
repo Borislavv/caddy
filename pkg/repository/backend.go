@@ -51,8 +51,6 @@ func (s *Backend) RevalidatorMaker(req *model.Request) func(ctx context.Context)
 	}
 }
 
-var TooManyRequests = errors.New("too many requests")
-
 // requestExternalBackend actually performs the HTTP request to backend and parses the response.
 // Returns a Data object suitable for caching.
 func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request) (*model.Data, error) {
@@ -74,6 +72,10 @@ func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request
 		return nil, err
 	}
 
+	for _, hdr := range req.Headers() {
+		request.Header.Add(string(hdr[0]), string(hdr[1]))
+	}
+
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return nil, err
@@ -87,5 +89,5 @@ func (s *Backend) requestExternalBackend(ctx context.Context, req *model.Request
 		return nil, err
 	}
 
-	return model.NewData(s.cfg, req.Path(), response.StatusCode, response.Header, body.Bytes()), nil
+	return model.NewData(req.Rule(), response.StatusCode, response.Header, body.Bytes()), nil
 }
