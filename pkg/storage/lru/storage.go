@@ -3,6 +3,7 @@ package lru
 import (
 	"context"
 	"github.com/caddyserver/caddy/v2/pkg/storage/lfu"
+	"math/rand/v2"
 	"runtime"
 	"strconv"
 	"time"
@@ -71,6 +72,18 @@ func (s *Storage) Get(req *model.Request) (*model.Response, bool) {
 	return nil, false
 }
 
+func (s *Storage) GetRandom() (resp *model.Response, isFound bool) {
+	s.shardedMap.
+		Shard(sharded.MapShardKey(uint64(rand.IntN(int(sharded.ActiveShards))))).
+		Walk(s.ctx, func(u uint64, response *model.Response) bool {
+			resp = response
+			isFound = true
+			return false
+		}, false)
+
+	return resp, isFound
+}
+
 // Set inserts or updates a response in the cache, updating Weight usage and Storage position.
 func (s *Storage) Set(new *model.Response) {
 	key := new.Request().MapKey()
@@ -119,10 +132,6 @@ func (s *Storage) set(new *model.Response) {
 
 // runLogger emits detailed stats about evictions, Weight, and GC activity every 5 seconds if debugging is enabled.
 func (s *Storage) runLogger() {
-	if !s.cfg.Cache.Logs.Stats {
-		return
-	}
-
 	go func() {
 		var ticker = utils.NewTicker(s.ctx, 5*time.Second)
 
