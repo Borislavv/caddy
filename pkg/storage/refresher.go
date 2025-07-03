@@ -90,14 +90,10 @@ func (r *Refresh) refreshItem(resp *model.Response) {
 			// Otherwise, you will have a lot of request errors (context cancelled), because in parent method ctx (from arg) has a timeout in milliseconds
 			// for be able to stop cycles in current iteration and start a new one.
 			if err := resp.Revalidate(r.ctx); err != nil {
-				if r.cfg.Cache.Logs.Stats {
-					r.refreshErroredNumCh <- struct{}{}
-				}
+				r.refreshErroredNumCh <- struct{}{}
 				return
 			}
-			if r.cfg.Cache.Logs.Stats {
-				r.refreshSuccessNumCh <- struct{}{}
-			}
+			r.refreshSuccessNumCh <- struct{}{}
 		}()
 	}
 }
@@ -105,10 +101,6 @@ func (r *Refresh) refreshItem(resp *model.Response) {
 // runLogger periodically logs the number of successful and failed refreshItem attempts.
 // This runs only if debugging is enabled in the config.
 func (r *Refresh) runLogger() {
-	if !r.cfg.Cache.Logs.Stats {
-		return
-	}
-
 	go func() {
 		erroredNumPer5Sec := 0
 		refreshesNumPer5Sec := 0
