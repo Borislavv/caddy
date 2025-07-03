@@ -37,7 +37,6 @@ type Env struct {
 type CacheBox struct {
 	Env         string        `yaml:"env"`
 	Enabled     bool          `yaml:"enabled"`
-	Logs        Logs          `yaml:"logs"`
 	LifeTime    Lifetime      `yaml:"lifetime"`
 	Upstream    Upstream      `yaml:"upstream"`
 	Persistence Persistence   `yaml:"persistence"`
@@ -46,11 +45,6 @@ type CacheBox struct {
 	Refresh     Refresh       `yaml:"refresh"`
 	Storage     Storage       `yaml:"storage"`
 	Rules       []*Rule       `yaml:"rules"`
-}
-
-type Logs struct {
-	Level string `yaml:"level"` // Any zerolog.Level.
-	Stats bool   `yaml:"stats"` // Should the statistic like num evictions, refreshes, rps, memory usage and so on be written in /std/out?
 }
 
 type Lifetime struct {
